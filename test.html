@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Multiplication Factory Adventure</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Comic Sans MS", cursive, sans-serif;
+        background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+        background-size: 400% 400%;
+        animation: gradientShift 8s ease infinite;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      @keyframes gradientShift {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      .game-world {
+        position: relative;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .factory-header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .factory-title {
+        font-size: 3em;
+        color: white;
+        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+        margin-bottom: 10px;
+        animation: bounce 2s ease-in-out infinite;
+      }
+
+      @keyframes bounce {
+        0%,
+        20%,
+        50%,
+        80%,
+        100% {
+          transform: translateY(0);
+        }
+        40% {
+          transform: translateY(-10px);
+        }
+        60% {
+          transform: translateY(-5px);
+        }
+      }
+
+      .game-stats {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
+      .stat-badge {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 20px;
+        padding: 15px 25px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        text-align: center;
+        min-width: 120px;
+      }
+
+      .stat-label {
+        font-size: 0.9em;
+        color: #666;
+        margin-bottom: 5px;
+      }
+
+      .stat-value {
+        font-size: 1.8em;
+        font-weight: bold;
+        color: #2c3e50;
+      }
+
+      .factory-floor {
+        display: flex;
+        justify-content: center;
+
+        /* align-items: flex-start; */
+        gap: 30px;
+        flex-wrap: wrap;
+      }
+
+
+
+      .input-station {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 30px;
+        padding: 30px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(15px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        max-width: 400px;
+        width: 100%;
+        position: relative;
+      }
+
+
+    
+      .machine-selector {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .machine-btn {
+        background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        margin: 0 5px;
+        border-radius: 50px;
+        font-size: 1em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 25px rgba(238, 90, 82, 0.3);
+      }
+
+      .machine-btn:hover {
+        transform: translateY(-3px) scale(1.05);
+      }
+
+      .machine-btn.active {
+        background: linear-gradient(45deg, #4ecdc4, #44a08d);
+      }
+
+      .problem-display {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .number-display {
+        font-size: 3em;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 20px;
+      }
+
+      .multiplication-sign {
+        color: #e74c3c;
+        margin: 0 20px;
+      }
+
+      .number-pool {
+        background: rgba(52, 152, 219, 0.1);
+        border: 2px dashed #3498db;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .pool-title {
+        font-size: 1.2em;
+        color: #2c3e50;
+        margin-bottom: 15px;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      .draggable-numbers {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .draggable-number {
+        background: linear-gradient(45deg, #3498db, #2980b9);
+        color: white;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 20px;
+        font-size: 1.2em;
+        font-weight: bold;
+        cursor: grab;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        user-select: none;
+      }
+
+      .draggable-number:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+      }
+
+      .draggable-number:active {
+        cursor: grabbing;
+      }
+
+      .draggable-number.used {
+        background: #95a5a6;
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .area-grid-container {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .breakdown-title {
+        font-size: 1.3em;
+        color: #2c3e50;
+        margin-bottom: 15px;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      .area-grid {
+        display: inline-block;
+        border: 4px solid #34495e;
+        border-radius: 15px;
+        background: #ecf0f1;
+        overflow: hidden;
+        margin: 20px 0;
+      }
+
+      .grid-row {
+        display: flex;
+      }
+
+      .grid-cell {
+        width: 100px;
+        height: 100px;
+        border: 2px solid #bdc3c7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2em;
+        font-weight: bold;
+        position: relative;
+        background: white;
+        transition: all 0.3s ease;
+      }
+
+      .grid-cell.header {
+        background: linear-gradient(45deg, #3498db, #2980b9);
+        color: white;
+        font-size: 1.1em;
+      }
+
+      .grid-cell.drop-zone {
+        background: rgba(241, 196, 15, 0.1);
+        border: 3px dashed #f39c12;
+      }
+
+      .grid-cell.drop-zone.drag-over {
+        background: rgba(241, 196, 15, 0.3);
+        transform: scale(1.05);
+      }
+
+      .grid-cell.filled {
+        background: linear-gradient(45deg, #2ecc71, #27ae60);
+        color: white;
+        animation: cellFill 0.5s ease;
+      }
+
+      .grid-cell.correct {
+        background: linear-gradient(45deg, #2ecc71, #27ae60);
+        color: white;
+        animation: cellFill 0.5s ease;
+      }
+
+      .grid-cell.wrong {
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+        color: white;
+        animation: inputShake 0.5s ease;
+      }
+
+      @keyframes cellFill {
+        0% {
+          transform: scale(0.8);
+          opacity: 0.5;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      @keyframes inputShake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-5px);
+        }
+        75% {
+          transform: translateX(5px);
+        }
+      }
+
+      .total-section {
+        background: rgba(230, 126, 34, 0.1);
+        border: 3px solid #e67e22;
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .total-title {
+        font-size: 1.4em;
+        color: #d35400;
+        margin-bottom: 15px;
+        font-weight: bold;
+      }
+
+      .total-drop-zone {
+        width: 150px;
+        height: 60px;
+        border: 3px dashed #e67e22;
+        border-radius: 10px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5em;
+        font-weight: bold;
+        background: white;
+        transition: all 0.3s ease;
+      }
+
+      .total-drop-zone.drag-over {
+        background: rgba(230, 126, 34, 0.2);
+        transform: scale(1.05);
+      }
+
+      .total-drop-zone.filled {
+        background: #d5f4e6;
+        border-color: #27ae60;
+      }
+
+      .control-panel {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+      }
+
+      .control-btn {
+        background: linear-gradient(45deg, #9b59b6, #8e44ad);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 50px;
+        font-size: 1.1em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 25px rgba(155, 89, 182, 0.3);
+      }
+      .grid-cell.empty {
+        background: #f8f9fa;
+        color: #6c757d;
+      }
+      .control-btn:hover {
+        transform: translateY(-3px);
+      }
+
+      .control-btn:disabled {
+        background: #95a5a6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .feedback {
+        text-align: center;
+        font-size: 1.2em;
+        font-weight: bold;
+        margin: 15px 0;
+        min-height: 30px;
+      }
+
+      .feedback.success {
+        color: #27ae60;
+      }
+
+      .feedback.error {
+        color: #e74c3c;
+      }
+
+      .success-explosion {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 4em;
+        pointer-events: none;
+        z-index: 1000;
+        animation: explode 2s ease-out forwards;
+      }
+
+      @keyframes explode {
+        0% {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(0);
+        }
+        50% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1.2);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(1);
+        }
+      }
+
+      @media (max-width: 768px) {
+        .factory-floor {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .grid-cell {
+          width: 80px;
+          height: 80px;
+          font-size: 1em;
+        }
+
+        .number-display {
+          font-size: 2.2em;
+        }
+
+        .draggable-number {
+          padding: 10px 15px;
+          font-size: 1.1em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="game-world">
+      <div class="factory-header">
+        <h1 class="factory-title">🏭 Area Model Multi</h1>
+        <!-- <div class="game-stats">
+          <div class="stat-badge">
+            <div class="stat-label">Products Made</div>
+            <div class="stat-value" id="productsCount">0</div>
+          </div>
+          <div class="stat-badge">
+            <div class="stat-label">Factory Level</div>
+            <div class="stat-value" id="factoryLevel">1</div>
+          </div>
+          <div class="stat-badge">
+            <div class="stat-label">Success Rate</div>
+            <div class="stat-value" id="successRate">100%</div>
+          </div>
+        </div> -->
+      </div>
+
+      <!-- <div class="machine-selector">
+        <button class="machine-btn active" onclick="selectMachine(1)">
+          🔧 2×1 Machine
+        </button>
+        <button class="machine-btn" onclick="selectMachine(2)">
+          ⚙️ 2×2 Machine
+        </button>
+        <button class="machine-btn" onclick="selectMachine(3)">
+          🔋 3×2 Machine
+        </button>
+      </div> -->
+
+      <div class="factory-floor">
+        <div class="input-station">
+          <div class="problem-display">
+            <div class="number-display">
+              <span id="num1">87</span>
+              <span class="multiplication-sign">×</span>
+              <span id="num2">8</span>
+            </div>
+          </div>
+
+          <div class="number-pool">
+            <div class="pool-title">🎯 Drag Numbers to Fill the Grid:</div>
+            <div class="draggable-numbers" id="numberPool"></div>
+          </div>
+
+          <div class="total-section">
+            <div class="total-title">🎯 Final Answer:</div>
+            <div class="total-drop-zone" id="totalDropZone">Drop Here</div>
+          </div>
+
+          <div class="area-grid-container">
+            <div class="breakdown-title">📊 Interactive Area Model Grid:</div>
+            <div id="areaGrid"></div>
+          </div>
+
+          <div class="feedback" id="feedback"></div>
+
+          <!-- <div class="control-panel">
+            <button class="control-btn" onclick="checkWork()">
+              ✅ Check Work
+            </button>
+            <button class="control-btn" onclick="showAnswer()">
+              💡 Show Answer
+            </button>
+            <button class="control-btn" onclick="newProblem()">
+              🚀 New Problem
+            </button>
+            <button class="control-btn" onclick="resetGrid()">
+              🔄 Reset Grid
+            </button>
+          </div> -->
+        </div>
+
+      </div>
+    </div>
+
+    <script>
+      let gameState = {
+        currentMachine: 1,
+        currentProblem: null,
+        productsCount: 0,
+        totalProblems: 0,
+        breakdown1: [],
+        breakdown2: [],
+        gridValues: {},
+        totalValue: null,
+        numberPool: [],
+      };
+
+      function selectMachine(level) {
+        gameState.currentMachine = level;
+        document.getElementById("factoryLevel").textContent = level;
+
+        document
+          .querySelectorAll(".machine-btn")
+          .forEach((btn) => btn.classList.remove("active"));
+        document
+          .querySelectorAll(".machine-btn")
+          [level - 1].classList.add("active");
+
+        newProblem();
+      }
+
+      function generateProblem() {
+        let num1, num2;
+
+        switch (gameState.currentMachine) {
+          case 1:
+            num1 = Math.floor(Math.random() * 90) + 10;
+            num2 = Math.floor(Math.random() * 9) + 1;
+            break;
+          case 2:
+            num1 = Math.floor(Math.random() * 90) + 10;
+            num2 = Math.floor(Math.random() * 90) + 10;
+            break;
+          case 3:
+            num1 = Math.floor(Math.random() * 900) + 100;
+            num2 = Math.floor(Math.random() * 90) + 10;
+            break;
+        }
+
+        return { num1, num2, answer: num1 * num2 };
+      }
+
+      function breakdownNumber(num) {
+        const digits = num.toString().split("").map(Number);
+        const breakdown = [];
+
+        for (let i = 0; i < digits.length; i++) {
+          const placeValue = Math.pow(10, digits.length - 1 - i);
+          if (digits[i] !== 0) {
+            breakdown.push(digits[i] * placeValue);
+          }
+        }
+
+        return breakdown;
+      }
+
+      function generateNumberPool() {
+        const num1 = gameState.currentProblem.num1;
+        const num2 = gameState.currentProblem.num2;
+
+        gameState.breakdown1 = breakdownNumber(num1);
+        gameState.breakdown2 = breakdownNumber(num2);
+
+        const correctAnswers = [];
+        let totalSum = 0;
+
+        // Generate all correct products
+        for (let i = 0; i < gameState.breakdown2.length; i++) {
+          for (let j = 0; j < gameState.breakdown1.length; j++) {
+            const product = gameState.breakdown1[j] * gameState.breakdown2[i];
+            correctAnswers.push(product);
+            totalSum += product;
+          }
+        }
+
+        // Add the final answer
+        correctAnswers.push(totalSum);
+
+        // Generate some distractors
+        const distractors = [];
+        for (let i = 0; i < 8; i++) {
+          let distractor;
+          do {
+            distractor = Math.floor(Math.random() * 1000) + 10;
+          } while (
+            correctAnswers.includes(distractor) ||
+            distractors.includes(distractor)
+          );
+          distractors.push(distractor);
+        }
+
+        // Combine and shuffle
+        gameState.numberPool = [...correctAnswers, ...distractors].sort(
+          () => Math.random() - 0.5
+        );
+      }
+
+      function createNumberPool() {
+        const poolContainer = document.getElementById("numberPool");
+        poolContainer.innerHTML = "";
+
+        gameState.numberPool.forEach((number, index) => {
+          const numberElement = document.createElement("div");
+          numberElement.className = "draggable-number";
+          numberElement.textContent = number;
+          numberElement.draggable = true;
+          numberElement.id = `number_${index}`;
+
+          numberElement.addEventListener("dragstart", handleDragStart);
+          numberElement.addEventListener("dragend", handleDragEnd);
+
+          poolContainer.appendChild(numberElement);
+        });
+      }
+
+      function createAreaGrid() {
+        let html = '<div class="area-grid">';
+
+        // Header row
+        html += '<div class="grid-row">';
+        html += '<div class="grid-cell header">×</div>';
+        gameState.breakdown1.forEach((part) => {
+          html += `<div class="grid-cell header">${part}</div>`;
+        });
+        html += "</div>";
+
+        // Data rows with empty drop zones
+        gameState.breakdown2.forEach((part2, row) => {
+          html += '<div class="grid-row">';
+          html += `<div class="grid-cell header">${part2}</div>`;
+          gameState.breakdown1.forEach((part1, col) => {
+            // Empty cell with just the drop zone styling
+            html += `<div class="grid-cell drop-zone empty" 
+                               id="grid_${row}_${col}" 
+                               data-row="${row}" 
+                               data-col="${col}"
+                               data-expected="${part1 * part2}">
+                                ?
+                            </div>`;
+          });
+          html += "</div>";
+        });
+
+        html += "</div>";
+        document.getElementById("areaGrid").innerHTML = html;
+
+        // Add event listeners to drop zones
+        document.querySelectorAll(".drop-zone").forEach((cell) => {
+          cell.addEventListener("dragover", handleDragOver);
+          cell.addEventListener("drop", handleDrop);
+          cell.addEventListener("dragleave", handleDragLeave);
+        });
+
+        // Add event listener to total drop zone
+        const totalDropZone = document.getElementById("totalDropZone");
+        totalDropZone.addEventListener("dragover", handleDragOver);
+        totalDropZone.addEventListener("drop", handleTotalDrop);
+        totalDropZone.addEventListener("dragleave", handleDragLeave);
+      }
+
+      let draggedElement = null;
+
+      function handleDragStart(e) {
+        draggedElement = e.target;
+        e.target.style.opacity = "0.5";
+      }
+
+      function handleDragEnd(e) {
+        e.target.style.opacity = "1";
+        draggedElement = null;
+      }
+
+      function handleDragOver(e) {
+        e.preventDefault();
+        e.target.classList.add("drag-over");
+      }
+
+      function handleDragLeave(e) {
+        e.target.classList.remove("drag-over");
+      }
+
+      function handleDrop(e) {
+        e.preventDefault();
+        e.target.classList.remove("drag-over");
+
+        if (draggedElement && !draggedElement.classList.contains("used")) {
+          const value = parseInt(draggedElement.textContent);
+
+          // Update the cell
+          e.target.textContent = value;
+          e.target.classList.remove("empty");
+          e.target.classList.add("filled");
+          e.target.classList.remove("drop-zone");
+
+          // Store the value in game state
+          const row = parseInt(e.target.dataset.row);
+          const col = parseInt(e.target.dataset.col);
+          gameState.gridValues[`${row}_${col}`] = value;
+
+          // Mark the number as used
+          draggedElement.classList.add("used");
+        }
+      }
+      function handleTotalDrop(e) {
+        e.preventDefault();
+        e.target.classList.remove("drag-over");
+
+        if (draggedElement && !draggedElement.classList.contains("used")) {
+          const value = parseInt(draggedElement.textContent);
+
+          e.target.textContent = value;
+          e.target.classList.add("filled");
+
+          gameState.totalValue = value;
+
+          draggedElement.classList.add("used");
+        }
+      }
+
+      function checkWork() {
+        let allCorrect = true;
+        const feedback = document.getElementById("feedback");
+
+        // Check grid values
+        for (let i = 0; i < gameState.breakdown2.length; i++) {
+          for (let j = 0; j < gameState.breakdown1.length; j++) {
+            const cellId = `grid_${i}_${j}`;
+            const cell = document.getElementById(cellId);
+            const expectedValue =
+              gameState.breakdown1[j] * gameState.breakdown2[i];
+            const actualValue = gameState.gridValues[`${i}_${j}`];
+
+            if (actualValue === expectedValue) {
+              cell.classList.add("correct");
+              cell.classList.remove("wrong");
+            } else if (actualValue !== undefined) {
+              cell.classList.add("wrong");
+              cell.classList.remove("correct");
+              allCorrect = false;
+            } else {
+              // Cell is empty
+              allCorrect = false;
+            }
+          }
+        }
+      }
+      function showAnswer() {
+        // Fill grid with correct answers
+        for (let i = 0; i < gameState.breakdown2.length; i++) {
+          for (let j = 0; j < gameState.breakdown1.length; j++) {
+            const cellId = `grid_${i}_${j}`;
+            const cell = document.getElementById(cellId);
+            const correctValue =
+              gameState.breakdown1[j] * gameState.breakdown2[i];
+
+            cell.textContent = correctValue;
+            cell.classList.add("correct");
+            cell.classList.remove("drop-zone");
+            gameState.gridValues[`${i}_${j}`] = correctValue;
+          }
+        }
+
+        // Fill total
+        const totalDropZone = document.getElementById("totalDropZone");
+        if (gameState.totalValue === gameState.currentProblem.answer) {
+          totalDropZone.style.background = "#d5f4e6";
+          totalDropZone.style.borderColor = "#27ae60";
+        } else if (gameState.totalValue !== null) {
+          totalDropZone.style.background = "#fadbd8";
+          totalDropZone.style.borderColor = "#e74c3c";
+          allCorrect = false;
+        } else {
+          // Total is empty
+          allCorrect = false;
+        }
+
+        if (allCorrect) {
+          feedback.textContent = "🎉 Perfect! All correct!";
+          feedback.className = "feedback success";
+          completeProduction();
+        } else {
+          feedback.textContent = "❌ Some answers are missing or incorrect!";
+          feedback.className = "feedback error";
+        }
+      }
+
+      // const feedback = document.getElementById('feedback');
+      // feedback.textContent = '💡 Here are all the answers! Study the pattern.';
+      // feedback.className = 'feedback';
+      //}
+
+      function resetGrid() {
+        gameState.gridValues = {};
+        gameState.totalValue = null;
+
+        // Reset grid cells
+        document.querySelectorAll(".grid-cell:not(.header)").forEach((cell) => {
+          cell.textContent = "Drop Here";
+          cell.className = "grid-cell drop-zone";
+        });
+
+        // Reset total
+        const totalDropZone = document.getElementById("totalDropZone");
+        totalDropZone.textContent = "Drop Here";
+        totalDropZone.className = "total-drop-zone";
+
+        // Reset number pool
+        document.querySelectorAll(".draggable-number").forEach((number) => {
+          number.classList.remove("used");
+        });
+
+        document.getElementById("feedback").textContent = "";
+      }
+
+      function completeProduction() {
+        gameState.productsCount++;
+        updateStats();
+
+        const explosion = document.createElement("div");
+        explosion.className = "success-explosion";
+        explosion.textContent = "🎉";
+        document.body.appendChild(explosion);
+
+        setTimeout(() => {
+          document.body.removeChild(explosion);
+        }, 2000);
+
+        const feedback = document.getElementById("feedback");
+        feedback.textContent = `🏆 Product #${gameState.productsCount} completed! Great work!`;
+        feedback.className = "feedback success";
+
+        setTimeout(() => {
+          newProblem();
+        }, 3000);
+      }
+
+      function updateStats() {
+        document.getElementById("productsCount").textContent =
+          gameState.productsCount;
+        const successRate =
+          gameState.totalProblems > 0
+            ? Math.round(
+                (gameState.productsCount / gameState.totalProblems) * 100
+              )
+            : 100;
+        document.getElementById("successRate").textContent = successRate + "%";
+      }
+
+      function newProblem() {
+        gameState.currentProblem = generateProblem();
+        gameState.totalProblems++;
+        gameState.gridValues = {};
+        gameState.totalValue = null;
+
+        document.getElementById("num1").textContent =
+          gameState.currentProblem.num1;
+        document.getElementById("num2").textContent =
+          gameState.currentProblem.num2;
+
+        generateNumberPool();
+        createNumberPool();
+        createAreaGrid();
+
+        // Reset total drop zone
+        const totalDropZone = document.getElementById("totalDropZone");
+        totalDropZone.textContent = "Drop Here";
+        totalDropZone.className = "total-drop-zone";
+
+        document.getElementById("feedback").textContent = "";
+        document.getElementById("feedback").className = "feedback";
+
+        updateStats();
+      }
+
+      // Initialize
+      newProblem();
+    </script>
+  </body>
+</html>

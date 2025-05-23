@@ -1,0 +1,336 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    background-image: url("assets/classroom.png");
+    background-size: cover;
+
+}
+
+.game-header {
+    text-align: center;
+    margin-top: 20px
+}
+
+.game-title {
+    font-size: 3em;
+    color: white;
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+
+}
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+    margin-top: 65px;
+    width: 1000px;
+    height: 500px;
+    background-image: url("assets/blackboard.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    overflow: hidden;
+    padding: 20px;
+}
+
+.number-display {
+    font-family: 'Schoolbell', cursive;
+    display: flex;
+    font-size: 3em;
+    font-weight: bold;
+    color: #fff;
+    z-index: 2;
+}
+
+.multiplication-sign {
+    color: #ffff;
+    margin: 0 20px;
+}
+
+.interaction-section {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: flex-start;
+    gap: 40px;
+    margin-top: 30px;
+    width: 100%;
+    padding: 0 40px;
+}
+
+.number-pool {
+    flex: 1;
+    max-width: 400px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px dashed #ffffff88;
+    border-radius: 15px;
+    padding: 20px;
+}
+
+.pool-title {
+    font-family: 'Schoolbell', cursive;
+    font-size: 1.4em;
+    color: white;
+    margin-bottom: 15px;
+    font-weight: bold;
+    text-align: center;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.4);
+}
+
+.draggable-numbers {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+}
+
+.draggable-number {
+    font-family: 'SchoolBell', cursive;
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    border: 1px solid;
+    border-radius: 20px;
+    font-size: 1.1em;
+    cursor: grab;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.draggable-number:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+}
+
+.draggable-number:active {
+    cursor: grabbing;
+}
+
+.draggable-number.used {
+    background: #95a5a6;
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+output {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    color: white;
+    font-family: 'Schoolbell', cursive;
+}
+
+@media (min-width: 768px) {
+    .output {
+        flex-direction: row;
+        /* Side-by-side on larger screens */
+        justify-content: space-around;
+        align-items: flex-start;
+    }
+}
+
+.area-grid-container {
+    text-align: center;
+    color: white;
+    font-family: 'Schoolbell', cursive;
+}
+
+.breakdown-title {
+    font-size: 1.5em;
+    color: white;
+    margin-bottom: 15px;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.4);
+    font-weight: bold;
+}
+
+.area-grid {
+    display: inline-block;
+    border: 3px dashed #ffffff88;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    /* chalky smudge background */
+    padding: 10px;
+    margin: 20px 0;
+}
+
+.grid-row {
+    display: flex;
+}
+
+.grid-cell {
+    width: 50px;
+    height: 50px;
+    border: 2px dashed #ffffff33;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3em;
+    font-weight: bold;
+    font-family: 'Schoolbell', cursive;
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.grid-cell.header {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-size: 1.2em;
+    text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.5);
+    border: 2px solid #ffffff66;
+}
+
+.grid-cell.drop-zone {
+    background: rgba(255, 255, 255, 0.07);
+    border: 2px dashed #ffffff88;
+}
+
+.grid-cell.drop-zone.drag-over {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.05);
+}
+
+.grid-cell.filled {
+    background: linear-gradient(45deg, #2ecc71, #27ae60);
+    color: white;
+    text-shadow: none;
+    animation: cellFill 0.5s ease;
+}
+
+.grid-cell.correct {
+    background: linear-gradient(45deg, #2ecc71, #27ae60);
+    color: white;
+    text-shadow: none;
+    animation: cellFill 0.5s ease;
+}
+
+.grid-cell.wrong {
+    background: linear-gradient(45deg, #e74c3c, #c0392b);
+    color: white;
+    text-shadow: none;
+    animation: inputShake 0.5s ease;
+}
+
+.total-section {
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px dashed rgba(255, 255, 255, 0.4);
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    color: white;
+    font-family: 'Schoolbell', cursive;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+}
+
+.total-title {
+    font-size: 1.5em;
+    color: white;
+    text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.4);
+    font-weight: bold;
+}
+
+.total-drop-zone {
+    width: 160px;
+    height: 60px;
+    border: 2px dashed rgba(255, 255, 255, 0.6);
+    border-radius: 12px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6em;
+    font-weight: bold;
+    color: white;
+    font-family: 'Schoolbell', cursive;
+    background: rgba(255, 255, 255, 0.08);
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.4);
+    transition: all 0.3s ease;
+}
+
+.total-drop-zone.drag-over {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.05);
+    border-color: white;
+}
+
+.total-drop-zone.filled {
+    background: linear-gradient(45deg, #2ecc71, #27ae60);
+    color: white;
+    text-shadow: none;
+    border-color: #2ecc71;
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.4);
+}
+
+.control-panel {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.control-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+    border: 2px dashed rgba(255, 255, 255, 0.4);
+    padding: 12px 25px;
+    border-radius: 50px;
+    font-size: 1.1em;
+    font-family: 'Schoolbell', cursive;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(2px);
+}
+
+.control-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.05);
+    box-shadow: 0 6px 25px rgba(255, 255, 255, 0.3);
+}
+
+.control-btn:active {
+    transform: scale(0.98);
+    box-shadow: none;
+}
+
+#lottieOverlay {
+
+    position: fixed;
+    top: 100%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    height: 300px;
+    z-index: 1000;
+    border-radius: 16px;
+    padding: 20px;
+    pointer-events: none;
+}
+
+#lottieContainer {
+    border: 2px solid red;
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 300px;
+    height: 300px;
+    z-index: 9999;
+    pointer-events: none;
+    display: none;
+    /* Show it only when needed */
+}

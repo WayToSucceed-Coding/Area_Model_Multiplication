@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Area Model Multiplication</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Schoolbell&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.6/lottie.min.js"></script>
+
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="game-header">
+      <h1 class="game-title">Area Model Multiplication</h1>
+    </div>
+
+    <div class="game-container">
+      <div class="number-display">
+        <span id="num1">87</span>
+        <span class="multiplication-sign">×</span>
+        <span id="num2">8</span>
+        <span>=?</span>
+      </div>
+
+      <div class="interaction-section">
+        <div class="number-pool">
+          <!-- <div class="pool-title">Drag Numbers to Fill the Grid:</div> -->
+          <div class="draggable-numbers" id="numberPool"></div>
+        </div>
+
+        <div class="output">
+          <div class="area-grid-container">
+            <!-- <div class="breakdown-title">Area Model Grid:</div> -->
+            <div id="areaGrid"></div>
+          </div>
+
+          <div class="total-section">
+            <div class="total-title">Final Answer:</div>
+            <div class="total-drop-zone" id="totalDropZone">Drop Here</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="control-panel">
+        <button class="control-btn" onclick="checkWork()">Check Work</button>
+      </div>
+    </div>
+
+    <div id="lottieOverlay">
+      <div id="correctContainer"></div>
+      <div id="incorrectContainer"></div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
