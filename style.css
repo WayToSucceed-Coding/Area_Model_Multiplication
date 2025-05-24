@@ -12,6 +12,7 @@ body {
     font-family: "Comic Sans MS", cursive, sans-serif;
     background-image: url("assets/classroom.png");
     background-size: cover;
+    background-repeat: no-repeat;
 
 }
 
@@ -21,10 +22,27 @@ body {
 }
 
 .game-title {
-    font-size: 3em;
+    font-size: clamp(2rem, 4vw, 3rem);
     color: white;
     text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
 
+}
+
+#scoreBoard {
+    position: absolute;
+    top: 300px;
+    /* adjust to match bulletin board */
+    left: 80px;
+    /* adjust to match bulletin board */
+    transform: rotate(-12deg) skew(-10deg);
+    /* tweak as needed */
+    font-family: 'Chalkboard', sans-serif;
+    font-size: 30px;
+    color: #fff;
+    padding: 10px;
+    border-radius: 10px;
+    pointer-events: none;
+    /* ensure it doesn't block interactions */
 }
 
 .game-container {
@@ -34,20 +52,29 @@ body {
     align-items: center;
     position: relative;
     margin-top: 65px;
-    width: 1000px;
-    height: 500px;
+    width: 50%;
+    aspect-ratio: 16 / 9;
     background-image: url("assets/blackboard.png");
-    background-size: cover;
+    background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
     overflow: hidden;
     padding: 20px;
 }
 
+.problem-answer-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 20px;
+    flex-wrap: wrap; /* allows wrapping on small screens */
+}
+
 .number-display {
     font-family: 'Schoolbell', cursive;
     display: flex;
-    font-size: 3em;
+    font-size: clamp(2rem, 4vw, 3rem);
     font-weight: bold;
     color: #fff;
     z-index: 2;
@@ -63,14 +90,17 @@ body {
     flex-direction: row;
     justify-content: space-around;
     align-items: flex-start;
-    gap: 40px;
+    gap: 2rem;
+    padding: 0 2rem;
+    flex-wrap: wrap;
     margin-top: 30px;
     width: 100%;
-    padding: 0 40px;
+
 }
 
 .number-pool {
     flex: 1;
+    width: 100%;
     max-width: 400px;
     background: rgba(255, 255, 255, 0.05);
     border: 2px dashed #ffffff88;
@@ -120,7 +150,6 @@ body {
 .draggable-number.used {
     background: #95a5a6;
     opacity: 0.5;
-    cursor: not-allowed;
     transform: none;
 }
 
@@ -173,11 +202,11 @@ output {
 .grid-cell {
     width: 50px;
     height: 50px;
+    font-size: 1.3em;
     border: 2px dashed #ffffff33;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.3em;
     font-weight: bold;
     font-family: 'Schoolbell', cursive;
     background: rgba(255, 255, 255, 0.05);
@@ -225,23 +254,18 @@ output {
     animation: inputShake 0.5s ease;
 }
 
-.total-section {
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px dashed rgba(255, 255, 255, 0.4);
-    border-radius: 15px;
-    padding: 20px;
-    text-align: center;
-    color: white;
-    font-family: 'Schoolbell', cursive;
-    box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+.drag-preview {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 2px dashed #555;
+    padding: 8px;
+    border-radius: 8px;
+    z-index: 10000;
+    font-weight: bold;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
 }
 
-.total-title {
-    font-size: 1.5em;
-    color: white;
-    text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.4);
-    font-weight: bold;
-}
+
 
 .total-drop-zone {
     width: 160px;
@@ -252,7 +276,7 @@ output {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.6em;
+    font-size: clamp(2rem, 4vw, 3rem);
     font-weight: bold;
     color: white;
     font-family: 'Schoolbell', cursive;
@@ -282,6 +306,7 @@ output {
 }
 
 .control-btn {
+    margin-top: 10px;
     background: rgba(255, 255, 255, 0.08);
     color: white;
     border: 2px dashed rgba(255, 255, 255, 0.4);
@@ -309,28 +334,51 @@ output {
 }
 
 #lottieOverlay {
-
     position: fixed;
-    top: 100%;
+    top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 300px;
     height: 300px;
     z-index: 1000;
-    border-radius: 16px;
-    padding: 20px;
     pointer-events: none;
 }
 
-#lottieContainer {
-    border: 2px solid red;
-    position: fixed;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 300px;
-    height: 300px;
-    z-index: 9999;
-    pointer-events: none;
-    display: none;
-    /* Show it only when needed */
+#correctContainer,
+#incorrectContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+@media (max-width: 768px) {
+  .interaction-section {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .game-title {
+    font-size: 2rem;
+    text-align: center;
+  }
+
+  .number-display {
+    font-size: 2.2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .game-container {
+    aspect-ratio: unset;
+    height: auto;
+    min-height: 60vh;
+  }
+
+  #scoreBoard {
+    font-size: 1.2rem;
+    top: 120px;
+    left: 20px;
+  }
 }

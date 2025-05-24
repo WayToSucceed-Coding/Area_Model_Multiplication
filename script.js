@@ -1,8 +1,9 @@
-
+// Global Game State Object
 let gameState = {
-    currentMachine: 1,
+    currentLevel: 1,
     currentProblem: null,
-    productsCount: 0,
+    score: 0,
+    actualAnswer:0,
     totalProblems: 0,
     breakdown1: [],
     breakdown2: [],
@@ -11,71 +12,38 @@ let gameState = {
     numberPool: [],
 };
 
-//Loading Animation
-var correctAnimation = lottie.loadAnimation({
-    container: document.getElementById("correctContainer"),
+// Touch support variables
+let selectedNumber = null;
+
+// DOM Elements
+const lottieContainer = document.getElementById('lottieOverlay');
+const correctAnimationContainer = document.getElementById('correctContainer');
+const incorrectAnimationContainer = document.getElementById('incorrectContainer');
+const checkBtn = document.querySelector('.control-btn');
+const scoreBoard = document.getElementById("scoreBoard");
+const totalDropZone = document.getElementById("totalDropZone");
+// Lottie Animations Initialization
+const correctAnimation = lottie.loadAnimation({
+    container: correctAnimationContainer,
     renderer: "svg",
     loop: false,
     autoplay: false,
     path: "assets/correct.json",
 });
 
-var incorrectAnimation = lottie.loadAnimation({
-    container: document.getElementById("incorrectContainer"),
+const incorrectAnimation = lottie.loadAnimation({
+    container: incorrectAnimationContainer,
     renderer: "svg",
     loop: false,
     autoplay: false,
     path: "assets/incorrect.json",
 });
 
-let lottieInstance = null;
-const lottieContainer = document.getElementById("lottieContainer");
-
-// function showLottieAnimation(type) {
-//     console.log('Hello: ' + type)
-//     const animation = lottieInstances[type];
-//     if (!animation) return;
-
-//     const overlay = document.getElementById("lottieOverlay");
-//     const container = document.getElementById("lottieContainer");
-
-//     // Clear and append SVG
-//     container.innerHTML = "";
-//     container.appendChild(animation.renderer.svgElement);
-
-//     // Show overlay
-//     overlay.style.display = "block";
-
-//     // Reset and play animation
-//     animation.goToAndStop(0, true);
-//     animation.play();
-
-//     // Hide overlay after animation
-//     setTimeout(() => {
-//         overlay.style.display = "none";
-//     }, 3000);
-// }
-
-
-
-function selectMachine(level) {
-    gameState.currentMachine = level;
-    document.getElementById("factoryLevel").textContent = level;
-
-    document
-        .querySelectorAll(".machine-btn")
-        .forEach((btn) => btn.classList.remove("active"));
-    document
-        .querySelectorAll(".machine-btn")
-    [level - 1].classList.add("active");
-
-    newProblem();
-}
-
+// Generate a multiplication problem based on current level
 function generateProblem() {
     let num1, num2;
 
-    switch (gameState.currentMachine) {
+    switch (gameState.currentLevel) {
         case 1:
             num1 = Math.floor(Math.random() * 90) + 10;
             num2 = Math.floor(Math.random() * 9) + 1;
@@ -89,10 +57,11 @@ function generateProblem() {
             num2 = Math.floor(Math.random() * 90) + 10;
             break;
     }
-
+    gameState.actualAnswer=num1*num2;
     return { num1, num2, answer: num1 * num2 };
 }
 
+// Break down a number into its place value components (e.g., 123 -> [100, 20, 3])
 function breakdownNumber(num) {
     const digits = num.toString().split("").map(Number);
     const breakdown = [];
@@ -107,21 +76,15 @@ function breakdownNumber(num) {
     return breakdown;
 }
 
+// Generate number pool with correct values and distractors
 function generateNumberPool() {
-    const num1 = gameState.currentProblem.num1;
-    const num2 = gameState.currentProblem.num2;
-
+    const { num1, num2 } = gameState.currentProblem;
     gameState.breakdown1 = breakdownNumber(num1);
     gameState.breakdown2 = breakdownNumber(num2);
 
-    const correctAnswers = [];
+    const correctAnswers = [...gameState.breakdown1, ...gameState.breakdown2];
     let totalSum = 0;
 
-    // Add the place values (headers) to the correctAnswers pool
-    correctAnswers.push(...gameState.breakdown1);
-    correctAnswers.push(...gameState.breakdown2);
-
-    // Generate all correct products
     for (let i = 0; i < gameState.breakdown2.length; i++) {
         for (let j = 0; j < gameState.breakdown1.length; j++) {
             const product = gameState.breakdown1[j] * gameState.breakdown2[i];
@@ -130,29 +93,70 @@ function generateNumberPool() {
         }
     }
 
-    // Add the final answer
     correctAnswers.push(totalSum);
 
-    // Generate some distractors
     const distractors = [];
-    for (let i = 0; i < 8; i++) {
-        let distractor;
-        do {
-            distractor = Math.floor(Math.random() * 1000) + 10;
-        } while (
-            correctAnswers.includes(distractor) ||
-            distractors.includes(distractor)
-        );
-        distractors.push(distractor);
+    while (distractors.length < 8) {
+        const distractor = Math.floor(Math.random() * 1000) + 10;
+        if (!correctAnswers.includes(distractor) && !distractors.includes(distractor)) {
+            distractors.push(distractor);
+        }
     }
 
-    // Combine and shuffle
-    gameState.numberPool = [...correctAnswers, ...distractors].sort(
-        () => Math.random() - 0.5
-    );
+    gameState.numberPool = [...correctAnswers, ...distractors].sort(() => Math.random() - 0.5);
 }
 
 
+// Replace all touch event handlers with these simplified versions
+function handleTouchStart(e) {
+    e.preventDefault();
+    selectedNumber = e.target;
+    selectedNumber.style.opacity = "0.7";
+}
+
+function handleTouchEnd(e) {
+    if (!selectedNumber) return;
+    e.preventDefault();
+    
+    const touch = e.changedTouches[0];
+    const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+    
+    selectedNumber.style.opacity = "1";
+    
+    if (dropTarget) {
+        // Handle grid cell drops
+        if ((dropTarget.classList.contains("drop-zone") || 
+             dropTarget.classList.contains("filled")) && 
+            !selectedNumber.classList.contains("used")) {
+            
+            const value = parseInt(selectedNumber.textContent);
+            
+            // For total drop zone
+            if (dropTarget.id === "totalDropZone") {
+                dropTarget.textContent = value;
+                gameState.totalValue = value;
+            } 
+            // For regular grid cells
+            else {
+                dropTarget.textContent = value;
+                dropTarget.classList.remove("empty");
+                dropTarget.classList.remove("wrong", "correct");
+                
+                const row = dropTarget.dataset.row;
+                const col = dropTarget.dataset.col;
+                
+                // Only store value if it's a numeric grid cell (not header)
+                if (row !== "header" && col !== "header") {
+                    gameState.gridValues[`${row}_${col}`] = value;
+                }
+            }
+        }
+    }
+    
+    selectedNumber = null;
+}
+
+// Update the number pool creation to use these simpler handlers
 function createNumberPool() {
     const poolContainer = document.getElementById("numberPool");
     poolContainer.innerHTML = "";
@@ -164,52 +168,36 @@ function createNumberPool() {
         numberElement.draggable = true;
         numberElement.id = `number_${index}`;
 
+        // Keep mouse drag events for desktop
         numberElement.addEventListener("dragstart", handleDragStart);
         numberElement.addEventListener("dragend", handleDragEnd);
 
+        // Simplified touch handlers
+        numberElement.addEventListener("touchstart", handleTouchStart, { passive: false });
+        numberElement.addEventListener("touchend", handleTouchEnd);
+        
         poolContainer.appendChild(numberElement);
     });
 }
 
+// Create area model grid with drop zones
 function createAreaGrid() {
     let html = '<div class="area-grid">';
-
-    // Top row: blank top-left + drop zones for breakdown1
     html += '<div class="grid-row">';
-    html += '<div class="grid-cell header">×</div>'; // Top-left corner
+    html += '<div class="grid-cell header">×</div>';
 
     gameState.breakdown1.forEach((part, col) => {
-        html += `<div class="grid-cell drop-zone empty header"
-                  id="col_header_${col}"
-                  data-row="header"
-                  data-col="${col}"
-                  data-expected="${part}">
-                ?
-            </div>`;
+        html += `<div class="grid-cell drop-zone empty header" id="col_header_${col}" data-row="header" data-col="${col}" data-expected="${part}">?</div>`;
     });
     html += "</div>";
 
-    // Data rows with left headers as drop zones
     gameState.breakdown2.forEach((part2, row) => {
         html += '<div class="grid-row">';
-
-        html += `<div class="grid-cell drop-zone empty header"
-                  id="row_header_${row}"
-                  data-row="${row}"
-                  data-col="header"
-                  data-expected="${part2}">
-              ?
-            </div>`;
+        html += `<div class="grid-cell drop-zone empty header" id="row_header_${row}" data-row="${row}" data-col="header" data-expected="${part2}">?</div>`;
 
         gameState.breakdown1.forEach((part1, col) => {
             const expectedProduct = part1 * part2;
-            html += `<div class="grid-cell drop-zone empty" 
-                   id="grid_${row}_${col}" 
-                   data-row="${row}" 
-                   data-col="${col}"
-                   data-expected="${expectedProduct}">
-                    ?
-                </div>`;
+            html += `<div class="grid-cell drop-zone empty" id="grid_${row}_${col}" data-row="${row}" data-col="${col}" data-expected="${expectedProduct}">?</div>`;
         });
 
         html += "</div>";
@@ -218,21 +206,19 @@ function createAreaGrid() {
     html += "</div>";
     document.getElementById("areaGrid").innerHTML = html;
 
-    // Add drag/drop listeners
+    // Attach drag/drop listeners
     document.querySelectorAll(".drop-zone").forEach((cell) => {
         cell.addEventListener("dragover", handleDragOver);
         cell.addEventListener("drop", handleDrop);
         cell.addEventListener("dragleave", handleDragLeave);
     });
 
-    // Total drop zone
     const totalDropZone = document.getElementById("totalDropZone");
     totalDropZone.addEventListener("dragover", handleDragOver);
     totalDropZone.addEventListener("drop", handleTotalDrop);
     totalDropZone.addEventListener("dragleave", handleDragLeave);
-}
 
-let draggedElement = null;
+}
 
 function handleDragStart(e) {
     draggedElement = e.target;
@@ -255,212 +241,155 @@ function handleDragLeave(e) {
 
 function handleDrop(e) {
     e.preventDefault();
-    e.target.classList.remove("drag-over");
 
     if (draggedElement && !draggedElement.classList.contains("used")) {
         const value = parseInt(draggedElement.textContent);
-
-        // Update the cell
         e.target.textContent = value;
-        e.target.classList.remove("empty");
-        e.target.classList.add("filled");
-        e.target.classList.remove("drop-zone");
+        e.target.classList.remove("empty", "drop-zone");
 
-        // Store the value in game state
         const row = parseInt(e.target.dataset.row);
         const col = parseInt(e.target.dataset.col);
         gameState.gridValues[`${row}_${col}`] = value;
-
-        // Mark the number as used
-        draggedElement.classList.add("used");
     }
 }
+
 function handleTotalDrop(e) {
     e.preventDefault();
     e.target.classList.remove("drag-over");
 
     if (draggedElement && !draggedElement.classList.contains("used")) {
         const value = parseInt(draggedElement.textContent);
-
         e.target.textContent = value;
-        e.target.classList.add("filled");
-
         gameState.totalValue = value;
-
-        draggedElement.classList.add("used");
     }
 }
 
-function checkWork() {
+function handleTouchStart(e) {
+    e.preventDefault();
+    selectedNumber = e.target;
+    selectedNumber.style.opacity = "0.7";
+}
 
+function handleTouchEnd(e) {
+    if (!selectedNumber) return;
+    e.preventDefault();
+    
+    const touch = e.changedTouches[0];
+    const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+    
+   
+    selectedNumber.style.opacity = "1";
+
+    if (dropTarget) {
+        // Handle grid cell drops
+        if ((dropTarget.classList.contains("drop-zone") )) {
+        
+            const value = parseInt(selectedNumber.textContent);
+            
+            // For total drop zone
+            if (dropTarget.id === "totalDropZone") {
+                
+                dropTarget.textContent = value;
+                gameState.totalValue = value;
+            } 
+            // For regular grid cells
+            else {
+                dropTarget.textContent = value;
+                dropTarget.classList.remove("empty");
+                dropTarget.classList.remove("wrong", "correct");
+                
+                const row = dropTarget.dataset.row;
+                const col = dropTarget.dataset.col;
+                
+                // Only store value if it's a numeric grid cell (not header)
+                if (row !== "header" && col !== "header") {
+                    gameState.gridValues[`${row}_${col}`] = value;
+                }
+            }
+        }
+    }
+    
+    selectedNumber = null;
+}
+
+// Validate grid and show appropriate feedback animation
+function checkWork() {
     let allCorrect = true;
 
+    const colHeaders = gameState.breakdown1.map((_, col) => parseInt(document.getElementById(`col_header_${col}`).textContent));
+    const rowHeaders = gameState.breakdown2.map((_, row) => parseInt(document.getElementById(`row_header_${row}`).textContent));
 
-    // Check grid values
     for (let i = 0; i < gameState.breakdown2.length; i++) {
         for (let j = 0; j < gameState.breakdown1.length; j++) {
             const cellId = `grid_${i}_${j}`;
             const cell = document.getElementById(cellId);
-            const expectedValue =
-                gameState.breakdown1[j] * gameState.breakdown2[i];
-            const actualValue = gameState.gridValues[`${i}_${j}`];
+            const expected = colHeaders[j] * rowHeaders[i];
+            const actual = gameState.gridValues[`${i}_${j}`];
 
-            if (actualValue === expectedValue) {
+            if (actual === expected) {
                 cell.classList.add("correct");
                 cell.classList.remove("wrong");
-            } else if (actualValue !== undefined) {
+            } else if (actual !== undefined) {
                 cell.classList.add("wrong");
                 cell.classList.remove("correct");
                 allCorrect = false;
-
             } else {
-                // Cell is empty
                 allCorrect = false;
             }
         }
     }
 
-    if (allCorrect) {
-        correctContainer.style.display = 'block';
-        correctAnimation.stop();
-        correctAnimation.goToAndPlay(0, true);
+    checkBtn.disabled = true;
 
-        correctAnimation.addEventListener('complete',function(){
-            correctContainer.style.display = 'none';
-        })
-
-
+    if (allCorrect && parseInt(totalDropZone.textContent) == gameState.actualAnswer) {
+        totalDropZone.classList.add("filled");
+        gameState.score++;
+        scoreBoard.textContent = `Score: ${gameState.score}`;
+        toggleLottie("correct");
     } else {
-        incorrectContainer.style.display = 'block';
-        incorrectAnimation.stop();
-        incorrectAnimation.goToAndPlay(0, true);
-
-        incorrectAnimation.addEventListener('complete',function(){
-            incorrectContainer.style.display = 'none';
-        })
-
-    }
-}
-function showAnswer() {
-    let allCorrect = true;
-    // Fill grid with correct answers
-    for (let i = 0; i < gameState.breakdown2.length; i++) {
-        for (let j = 0; j < gameState.breakdown1.length; j++) {
-            const cellId = `grid_${i}_${j}`;
-            const cell = document.getElementById(cellId);
-            const correctValue =
-                gameState.breakdown1[j] * gameState.breakdown2[i];
-
-            cell.textContent = correctValue;
-            cell.classList.add("correct");
-            cell.classList.remove("drop-zone");
-            gameState.gridValues[`${i}_${j}`] = correctValue;
-        }
-    }
-
-    // Fill total
-    const totalDropZone = document.getElementById("totalDropZone");
-    if (gameState.totalValue === gameState.currentProblem.answer) {
-        totalDropZone.style.background = "#d5f4e6";
-        totalDropZone.style.borderColor = "#27ae60";
-    } else if (gameState.totalValue !== null) {
-        totalDropZone.style.background = "#fadbd8";
-        totalDropZone.style.borderColor = "#e74c3c";
-        allCorrect = false;
-    } else {
-        // Total is empty
-        allCorrect = false;
-    }
-
-    if (allCorrect) {
-        //showLottieAnimation('correct');
-        completeProduction();
-    } else {
-        //showLottieAnimation('incorrect');
+        toggleLottie("incorrect");
     }
 }
 
+// Helper to toggle Lottie animation based on result
+function toggleLottie(type) {
+    lottieContainer.style.display = 'block';
+    correctAnimationContainer.style.display = (type === "correct") ? "block" : "none";
+    incorrectAnimationContainer.style.display = (type === "incorrect") ? "block" : "none";
 
+    const animation = (type === "correct") ? correctAnimation : incorrectAnimation;
 
-function resetGrid() {
-    gameState.gridValues = {};
-    gameState.totalValue = null;
-
-    // Reset grid cells
-    document.querySelectorAll(".grid-cell:not(.header)").forEach((cell) => {
-        cell.textContent = "Drop Here";
-        cell.className = "grid-cell drop-zone";
-    });
-
-    // Reset total
-    const totalDropZone = document.getElementById("totalDropZone");
-    totalDropZone.textContent = "Drop Here";
-    totalDropZone.className = "total-drop-zone";
-
-    // Reset number pool
-    document.querySelectorAll(".draggable-number").forEach((number) => {
-        number.classList.remove("used");
-    });
-
-    document.getElementById("feedback").textContent = "";
+    animation.stop();
+    animation.goToAndPlay(0, true);
+    animation.addEventListener('complete', function () {
+        lottieContainer.style.display = 'none';
+        correctAnimationContainer.style.display = "none";
+        incorrectAnimationContainer.style.display = "none";
+        if (type === "correct") newProblem();
+        checkBtn.disabled = false;
+    }, { once: true });
 }
 
-function completeProduction() {
-    gameState.productsCount++;
-    updateStats();
-
-    const explosion = document.createElement("div");
-    explosion.className = "success-explosion";
-    explosion.textContent = "🎉";
-    document.body.appendChild(explosion);
-
-    setTimeout(() => {
-        document.body.removeChild(explosion);
-    }, 2000);
-
-    const feedback = document.getElementById("feedback");
-    feedback.textContent = `🏆 Product #${gameState.productsCount} completed! Great work!`;
-    feedback.className = "feedback success";
-
-    setTimeout(() => {
-        newProblem();
-    }, 3000);
-}
-
-function updateStats() {
-    //document.getElementById("productsCount").textContent =  gameState.productsCount;
-    const successRate =
-        gameState.totalProblems > 0
-            ? Math.round(
-                (gameState.productsCount / gameState.totalProblems) * 100
-            )
-            : 100;
-    //document.getElementById("successRate").textContent = successRate + "%";
-}
-
+// Set up a new problem round
 function newProblem() {
     gameState.currentProblem = generateProblem();
     gameState.totalProblems++;
     gameState.gridValues = {};
     gameState.totalValue = null;
 
-    document.getElementById("num1").textContent =
-        gameState.currentProblem.num1;
-    document.getElementById("num2").textContent =
-        gameState.currentProblem.num2;
+    document.getElementById("num1").textContent = gameState.currentProblem.num1;
+    document.getElementById("num2").textContent = gameState.currentProblem.num2;
 
     generateNumberPool();
     createNumberPool();
     createAreaGrid();
 
-    // Reset total drop zone
-    const totalDropZone = document.getElementById("totalDropZone");
-    totalDropZone.textContent = "Drop Here";
-    totalDropZone.className = "total-drop-zone";
+    
+    totalDropZone.textContent = "?";
+    totalDropZone.className = "total-drop-zone drop-zone";
 
-
-    updateStats();
+    checkBtn.disabled = false;
 }
 
-// Initialize
+// Initialize game
 newProblem();
